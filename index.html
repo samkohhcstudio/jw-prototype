@@ -8,7 +8,57 @@
   <link rel="shortcut icon" href="TemplateData/favicon.ico">
   <link rel="stylesheet" href="TemplateData/style.css">
 
-  <!-- Add these styles to your existing head section -->
+  <!-- Firebase App (the core Firebase SDK) -->
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.8/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/9.6.8/firebase-auth.js";
+
+    // Your web app's Firebase configuration (replace with your actual config)
+    const firebaseConfig = {
+      apiKey: "AIzaSyCrCIMRVSbzy4divfa68sAwdwyOoFXcddk",
+      authDomain: "jw-social-78d7c.firebaseapp.com",
+      projectId: "jw-social-78d7c",
+      storageBucket: "jw-social-78d7c.appspot.com",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // Add your value
+      appId: "YOUR_APP_ID", // Add your value
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    // Update Google login function to use Firebase
+    window.googleLogin = async function () {
+      try {
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+        const token = await user.getIdToken(); // Get Firebase ID token
+
+        // Store the token and notify Unity
+        sessionStorage.setItem('jwt_token', token);
+        if (typeof unityInstance !== 'undefined') {
+          unityInstance.SendMessage('AuthManager', 'OnLoginSuccess', token);
+        }
+      } catch (error) {
+        console.error("Error during Google sign in:", error);
+      }
+    };
+
+    // Capture JWT token from URL and store in sessionStorage
+    window.captureAndStoreToken = function () {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+      if (token) {
+        sessionStorage.setItem('jwt_token', token);
+        if (typeof unityInstance !== 'undefined') {
+          unityInstance.SendMessage('AuthManager', 'OnLoginSuccess', token);
+        }
+      }
+    };
+  </script>
+
   <style>
     .nav-login {
       position: fixed;
@@ -53,12 +103,31 @@
     /* Adjust the unity container to account for the nav bar */
     #unity-container {
       margin-top: 60px;
-      /* Adjust this value based on your nav height */
     }
   </style>
 </head>
 
 <body>
+  <!-- Navigation Bar with Login Options -->
+  <div class="nav-login">
+    <!-- Google Login Button -->
+    <button class="login-button" onclick="googleLogin()">
+      <img src="https://www.google.com/favicon.ico" alt="Google" style="width: 16px; height: 16px;">
+      Sign in with Google
+    </button>
+
+    <div class="login-divider"></div>
+
+    <!-- Telegram Login Widget -->
+    <div>
+      <script async src="https://telegram.org/js/telegram-widget.js?7" data-telegram-login="socialLogin111Bot"
+        data-size="medium" data-userpic="false" data-auth-url="https://your-backend-url.com/auth/telegram"
+        data-request-access="write">
+        </script>
+    </div>
+  </div>
+
+  <!-- Unity Container -->
   <div id="unity-container" class="unity-desktop">
     <canvas id="unity-canvas" width=540 height=960 tabindex="-1"></canvas>
     <div id="unity-loading-bar">
@@ -75,57 +144,11 @@
     </div>
   </div>
 
-  <!-- Login Options Section -->
-  <div class="nav-login">
-    <!-- Google Login Button -->
-    <button class="login-button" onclick="googleLogin()">
-      <img src="https://www.google.com/favicon.ico" alt="Google" style="width: 16px; height: 16px;">
-      Sign in with Google
-    </button>
-
-    <div class="login-divider"></div>
-
-    <!-- Telegram Login Widget -->
-    <div>
-      <script async src="https://telegram.org/js/telegram-widget.js?7" data-telegram-login="socialLogin111Bot"
-        data-size="medium"
-        data-auth-url="https://fc85-2001-f40-906-3cda-3909-134a-9730-ac92.ngrok-free.app/auth/telegram"
-        data-request-access="write">
-        </script>
-    </div>
-  </div>
-
+  <!-- Unity Loader and Initialization -->
   <script>
-    // Function to initiate Google login
-    function googleLogin() {
-      window.location.href = "https://fc85-2001-f40-906-3cda-3909-134a-9730-ac92.ngrok-free.app/auth/google";
-    }
-
-    // Function to capture JWT token from URL and store it in sessionStorage
-    function captureAndStoreToken() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('token'); // Get JWT token from URL parameters
-
-      if (token) {
-        // Store the token in sessionStorage
-        sessionStorage.setItem('jwt_token', token);
-
-        // Check if unityInstance is defined (Unity fully loaded) and send the token
-        if (typeof unityInstance !== 'undefined') {
-          unityInstance.SendMessage('AuthManager', 'OnLoginSuccess', token);
-        }
-      }
-    }
-
     // Load Unity and setup canvas and configurations
     var canvas = document.querySelector("#unity-canvas");
 
-    // Shows a temporary message banner/ribbon for a few seconds, or
-    // a permanent error message on top of the canvas if type=='error'.
-    // If type=='warning', a yellow highlight color is used.
-    // Modify or remove this function to customize the visually presented
-    // way that non-critical warnings and error messages are presented to the
-    // user.
     function unityShowBanner(msg, type) {
       var warningBanner = document.querySelector("#unity-warning");
       function updateBannerVisibility() {
@@ -159,39 +182,14 @@
       showBanner: unityShowBanner,
     };
 
-    // By default, Unity keeps WebGL canvas render target size matched with
-    // the DOM size of the canvas element (scaled by window.devicePixelRatio)
-    // Set this to false if you want to decouple this synchronization from
-    // happening inside the engine, and you would instead like to size up
-    // the canvas DOM size and WebGL render target sizes yourself.
-    // config.matchWebGLToCanvasSize = false;
-
-    // If you would like all file writes inside Unity Application.persistentDataPath
-    // directory to automatically persist so that the contents are remembered when
-    // the user revisits the site the next time, uncomment the following line:
-    // config.autoSyncPersistentDataPath = true;
-    // This autosyncing is currently not the default behavior to avoid regressing
-    // existing user projects that might rely on the earlier manual
-    // JS_FileSystem_Sync() behavior, but in future Unity version, this will be
-    // expected to change.
-
     if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-      // Mobile device style: fill the whole browser client area with the game canvas:
-
       var meta = document.createElement('meta');
       meta.name = 'viewport';
       meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
       document.getElementsByTagName('head')[0].appendChild(meta);
       document.querySelector("#unity-container").className = "unity-mobile";
       canvas.className = "unity-mobile";
-
-      // To lower canvas resolution on mobile devices to gain some
-      // performance, uncomment the following line:
-      // config.devicePixelRatio = 1;
-
-
     } else {
-      // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
       canvas.style.width = "540px";
       canvas.style.height = "960px";
     }
@@ -218,7 +216,6 @@
     };
 
     document.body.appendChild(script);
-
   </script>
 </body>
 
