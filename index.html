@@ -31,7 +31,17 @@
     data-size="large" data-auth-url="https://fc85-2001-f40-906-3cda-3909-134a-9730-ac92.ngrok-free.app/auth/telegram"
     data-request-access="write"></script>
 
+  <!-- Google Login Button -->
+  <div style="text-align: center; margin-top: 20px;">
+    <button onclick="googleLogin()">Login with Google</button>
+  </div>
+
   <script>
+    // Function to initiate Google login
+    function googleLogin() {
+      window.location.href = "https://fc85-2001-f40-906-3cda-3909-134a-9730-ac92.ngrok-free.app/auth/google";
+    }
+
     // Function to capture JWT token from URL and store it in sessionStorage
     function captureAndStoreToken() {
       const urlParams = new URLSearchParams(window.location.search);
