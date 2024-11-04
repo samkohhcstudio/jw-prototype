@@ -7,89 +7,9 @@
   <title>Unity Web Player | JWPrototype</title>
   <link rel="shortcut icon" href="TemplateData/favicon.ico">
   <link rel="stylesheet" href="TemplateData/style.css">
-  <style>
-    /* Basic styling for navigation bar */
-    .navbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background-color: #333;
-      padding: 10px 20px;
-      color: white;
-    }
-
-    .navbar .title {
-      font-size: 20px;
-    }
-
-    .navbar .login-menu {
-      position: relative;
-      display: inline-block;
-    }
-
-    .login-menu button {
-      background-color: #333;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    .login-menu button:hover {
-      background-color: #555;
-    }
-
-    .login-dropdown {
-      display: none;
-      position: absolute;
-      right: 0;
-      background-color: #333;
-      min-width: 180px;
-      box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
-      z-index: 1;
-    }
-
-    .login-dropdown a {
-      color: white;
-      padding: 12px 16px;
-      text-decoration: none;
-      display: block;
-      font-size: 16px;
-    }
-
-    .login-dropdown a:hover {
-      background-color: #555;
-    }
-
-    /* Show dropdown on button hover */
-    .login-menu:hover .login-dropdown {
-      display: block;
-    }
-
-    /* Center the Unity canvas */
-    #unity-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-top: 20px;
-    }
-  </style>
 </head>
 
 <body>
-  <!-- Navigation bar with title and login options -->
-  <div class="navbar">
-    <div class="title">JWPrototype</div>
-    <div class="login-menu">
-      <button>Login</button>
-      <div class="login-dropdown">
-        <a href="#" onclick="googleLogin()">Login with Google</a>
-        <a href="#" onclick="telegramLogin()">Login with Telegram</a>
-      </div>
-    </div>
-  </div>
-
   <div id="unity-container" class="unity-desktop">
     <canvas id="unity-canvas" width=540 height=960 tabindex="-1"></canvas>
     <div id="unity-loading-bar">
@@ -106,23 +26,26 @@
     </div>
   </div>
 
-  <!-- Telegram Login Widget Script, hidden by default -->
-  <script async src="https://telegram.org/js/telegram-widget.js?7" data-telegram-login="socialLogin111Bot"
-    data-size="large" data-auth-url="https://fc85-2001-f40-906-3cda-3909-134a-9730-ac92.ngrok-free.app/auth/telegram"
-    data-request-access="write" id="telegram-login-widget" style="display: none;"></script>
+  <!-- Login Options Section -->
+  <div class="login-options">
+    <p>Please choose a login method:</p>
+
+    <!-- Google Login Button -->
+    <button class="login-button" onclick="googleLogin()">Login with Google</button>
+
+    <!-- Telegram Login Widget -->
+    <div>
+      <script async src="https://telegram.org/js/telegram-widget.js?7" data-telegram-login="socialLogin111Bot"
+        data-size="large"
+        data-auth-url="https://fc85-2001-f40-906-3cda-3909-134a-9730-ac92.ngrok-free.app/auth/telegram"
+        data-request-access="write"></script>
+    </div>
+  </div>
 
   <script>
     // Function to initiate Google login
     function googleLogin() {
       window.location.href = "https://fc85-2001-f40-906-3cda-3909-134a-9730-ac92.ngrok-free.app/auth/google";
-    }
-
-    // Function to initiate Telegram login by showing the Telegram widget
-    function telegramLogin() {
-      const telegramWidget = document.getElementById("telegram-login-widget");
-      if (telegramWidget) {
-        telegramWidget.style.display = "block"; // Show the widget when clicked
-      }
     }
 
     // Function to capture JWT token from URL and store it in sessionStorage
@@ -146,6 +69,10 @@
 
     // Shows a temporary message banner/ribbon for a few seconds, or
     // a permanent error message on top of the canvas if type=='error'.
+    // If type=='warning', a yellow highlight color is used.
+    // Modify or remove this function to customize the visually presented
+    // way that non-critical warnings and error messages are presented to the
+    // user.
     function unityShowBanner(msg, type) {
       var warningBanner = document.querySelector("#unity-warning");
       function updateBannerVisibility() {
@@ -179,14 +106,39 @@
       showBanner: unityShowBanner,
     };
 
+    // By default, Unity keeps WebGL canvas render target size matched with
+    // the DOM size of the canvas element (scaled by window.devicePixelRatio)
+    // Set this to false if you want to decouple this synchronization from
+    // happening inside the engine, and you would instead like to size up
+    // the canvas DOM size and WebGL render target sizes yourself.
+    // config.matchWebGLToCanvasSize = false;
+
+    // If you would like all file writes inside Unity Application.persistentDataPath
+    // directory to automatically persist so that the contents are remembered when
+    // the user revisits the site the next time, uncomment the following line:
+    // config.autoSyncPersistentDataPath = true;
+    // This autosyncing is currently not the default behavior to avoid regressing
+    // existing user projects that might rely on the earlier manual
+    // JS_FileSystem_Sync() behavior, but in future Unity version, this will be
+    // expected to change.
+
     if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+      // Mobile device style: fill the whole browser client area with the game canvas:
+
       var meta = document.createElement('meta');
       meta.name = 'viewport';
       meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
       document.getElementsByTagName('head')[0].appendChild(meta);
       document.querySelector("#unity-container").className = "unity-mobile";
       canvas.className = "unity-mobile";
+
+      // To lower canvas resolution on mobile devices to gain some
+      // performance, uncomment the following line:
+      // config.devicePixelRatio = 1;
+
+
     } else {
+      // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
       canvas.style.width = "540px";
       canvas.style.height = "960px";
     }
