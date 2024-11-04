@@ -26,14 +26,20 @@
     </div>
   </div>
 
-  <!-- Telegram Login Widget -->
-  <script async src="https://telegram.org/js/telegram-widget.js?7" data-telegram-login="socialLogin111Bot"
-    data-size="large" data-auth-url="https://fc85-2001-f40-906-3cda-3909-134a-9730-ac92.ngrok-free.app/auth/telegram"
-    data-request-access="write"></script>
+  <!-- Login Options Section -->
+  <div class="login-options">
+    <p>Please choose a login method:</p>
 
-  <!-- Google Login Button -->
-  <div style="text-align: center; margin-top: 20px;">
-    <button onclick="googleLogin()">Login with Google</button>
+    <!-- Google Login Button -->
+    <button class="login-button" onclick="googleLogin()">Login with Google</button>
+
+    <!-- Telegram Login Widget -->
+    <div>
+      <script async src="https://telegram.org/js/telegram-widget.js?7" data-telegram-login="socialLogin111Bot"
+        data-size="large"
+        data-auth-url="https://fc85-2001-f40-906-3cda-3909-134a-9730-ac92.ngrok-free.app/auth/telegram"
+        data-request-access="write"></script>
+    </div>
   </div>
 
   <script>
