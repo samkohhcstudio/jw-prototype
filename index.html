@@ -7,6 +7,65 @@
   <title>Unity Web Player | JWPrototype</title>
   <link rel="shortcut icon" href="TemplateData/favicon.ico">
   <link rel="stylesheet" href="TemplateData/style.css">
+
+  <!-- Add these styles to your existing head section -->
+  <style>
+    .login-options {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.95);
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      min-width: 300px;
+    }
+
+    .login-options p {
+      font-size: 1.2rem;
+      color: #333;
+      margin-bottom: 1.5rem;
+    }
+
+    .login-button {
+      background: #4285f4;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-bottom: 1rem;
+      width: 100%;
+      transition: background-color 0.3s ease;
+    }
+
+    .login-button:hover {
+      background: #357abd;
+    }
+
+    .login-divider {
+      margin: 1rem 0;
+      display: flex;
+      align-items: center;
+      text-align: center;
+    }
+
+    .login-divider::before,
+    .login-divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .login-divider span {
+      padding: 0 10px;
+      color: #666;
+      font-size: 0.9rem;
+    }
+  </style>
 </head>
 
 <body>
@@ -28,17 +87,26 @@
 
   <!-- Login Options Section -->
   <div class="login-options">
-    <p>Please choose a login method:</p>
+    <p>Welcome! Please sign in</p>
 
     <!-- Google Login Button -->
-    <button class="login-button" onclick="googleLogin()">Login with Google</button>
+    <button class="login-button" onclick="googleLogin()">
+      <img src="https://www.google.com/favicon.ico" alt="Google"
+        style="width: 18px; vertical-align: middle; margin-right: 8px;">
+      Continue with Google
+    </button>
+
+    <div class="login-divider">
+      <span>or</span>
+    </div>
 
     <!-- Telegram Login Widget -->
-    <div>
+    <div style="margin-top: 0.5rem;">
       <script async src="https://telegram.org/js/telegram-widget.js?7" data-telegram-login="socialLogin111Bot"
         data-size="large"
         data-auth-url="https://fc85-2001-f40-906-3cda-3909-134a-9730-ac92.ngrok-free.app/auth/telegram"
-        data-request-access="write"></script>
+        data-request-access="write">
+        </script>
     </div>
   </div>
 
