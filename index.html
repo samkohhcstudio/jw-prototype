@@ -140,6 +140,9 @@
           unityInstance.SetFullscreen(1);
         };
 
+        // Call captureAndStoreToken to handle token once Unity is ready
+        captureAndStoreToken();
+
       }).catch((message) => {
         alert(message);
       });
