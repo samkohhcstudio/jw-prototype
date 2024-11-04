@@ -7,9 +7,87 @@
   <title>Unity Web Player | JWPrototype</title>
   <link rel="shortcut icon" href="TemplateData/favicon.ico">
   <link rel="stylesheet" href="TemplateData/style.css">
+  <style>
+    /* Basic styling for navigation bar */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #333;
+      padding: 10px 20px;
+      color: white;
+    }
+
+    .navbar .title {
+      font-size: 20px;
+    }
+
+    .navbar .login-menu {
+      position: relative;
+      display: inline-block;
+    }
+
+    .login-menu button {
+      background-color: #333;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .login-menu button:hover {
+      background-color: #555;
+    }
+
+    .login-dropdown {
+      display: none;
+      position: absolute;
+      right: 0;
+      background-color: #333;
+      min-width: 180px;
+      box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+      z-index: 1;
+    }
+
+    .login-dropdown a {
+      color: white;
+      padding: 12px 16px;
+      text-decoration: none;
+      display: block;
+      font-size: 16px;
+    }
+
+    .login-dropdown a:hover {
+      background-color: #555;
+    }
+
+    /* Show dropdown on button hover */
+    .login-menu:hover .login-dropdown {
+      display: block;
+    }
+
+    /* Center the Unity canvas */
+    #unity-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 20px;
+    }
+  </style>
 </head>
 
-<body>
+<body><!-- Navigation bar with title and login options -->
+  <div class="navbar">
+    <div class="title">JWPrototype</div>
+    <div class="login-menu">
+      <button>Login</button>
+      <div class="login-dropdown">
+        <a href="#" onclick="googleLogin()">Login with Google</a>
+        <a href="#" onclick="telegramLogin()">Login with Telegram</a>
+      </div>
+    </div>
+  </div>
   <div id="unity-container" class="unity-desktop">
     <canvas id="unity-canvas" width=540 height=960 tabindex="-1"></canvas>
     <div id="unity-loading-bar">
@@ -26,21 +104,12 @@
     </div>
   </div>
 
-  <!-- Login Options Section -->
-  <div class="login-options">
-    <p>Please choose a login method:</p>
 
-    <!-- Google Login Button -->
-    <button class="login-button" onclick="googleLogin()">Login with Google</button>
 
-    <!-- Telegram Login Widget -->
-    <div>
-      <script async src="https://telegram.org/js/telegram-widget.js?7" data-telegram-login="socialLogin111Bot"
-        data-size="large"
-        data-auth-url="https://fc85-2001-f40-906-3cda-3909-134a-9730-ac92.ngrok-free.app/auth/telegram"
-        data-request-access="write"></script>
-    </div>
-  </div>
+  <!-- Telegram Login Widget Script, hidden by default -->
+  <script async src="https://telegram.org/js/telegram-widget.js?7" data-telegram-login="socialLogin111Bot"
+    data-size="large" data-auth-url="https://fc85-2001-f40-906-3cda-3909-134a-9730-ac92.ngrok-free.app/auth/telegram"
+    data-request-access="write" id="telegram-login-widget" style="display: none;"></script>
 
   <script>
     // Function to initiate Google login
