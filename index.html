@@ -156,6 +156,7 @@
 
     // Wrap Unity loading code in a function
     function loadUnity() {
+      console.log('Loading Unity...');
       unityLoaded = true;
       var script = document.createElement("script");
       script.src = loaderUrl;
@@ -197,6 +198,7 @@
 
     // Update login success handling
     function handleLoginSuccess(token) {
+      console.log('Handling login success with token:', token);
       sessionStorage.setItem('jwt_token', token);
       isLoggedIn = true;
 
@@ -204,7 +206,7 @@
       document.getElementById('login-message').style.display = 'none';
       document.getElementById('unity-container').style.display = 'block';
       document.getElementById('logout-button').style.display = 'block';
-      document.getElementById('login-options').style.display = 'none'; // Hide login options
+      document.getElementById('login-options').style.display = 'none';
 
       // Load Unity if not already loaded
       if (!unityLoaded) {
@@ -232,12 +234,14 @@
         body: JSON.stringify(user)
       })
         .then(response => {
+          console.log('Telegram auth response:', response);
           if (!response.ok) {
             throw new Error('Network response was not ok');
           }
           return response.json();
         })
         .then(data => {
+          console.log('Telegram auth data:', data);
           if (data.token) {
             // Store user info
             sessionStorage.setItem('username', user.first_name);
@@ -245,7 +249,7 @@
             sessionStorage.setItem('photo_url', user.photo_url);
 
             // Handle the login success directly instead of redirecting
-            handleLoginSuccess(data.token);
+            handleLoginSuccess(data.token);  // This will load the game
           } else {
             console.error('No token received from server');
           }
