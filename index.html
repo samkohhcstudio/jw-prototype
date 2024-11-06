@@ -52,32 +52,13 @@
 
     /* Adjust the unity container to account for the nav bar */
     #unity-container {
-      display: none;
-      /* Hide the Unity container by default */
-    }
-
-    .login-message {
-      text-align: center;
-      margin-top: 100px;
-      font-size: 1.2rem;
-      color: #666;
-    }
-
-    #logout-button {
-      background: #dc3545;
-    }
-
-    #logout-button:hover {
-      background: #c82333;
+      margin-top: 60px;
+      /* Adjust this value based on your nav height */
     }
   </style>
 </head>
 
 <body>
-  <!-- Add a login message -->
-  <div id="login-message" class="login-message">
-    Please log in to play the game
-  </div>
   <div id="unity-container" class="unity-desktop">
     <canvas id="unity-canvas" width=540 height=960 tabindex="-1"></canvas>
     <div id="unity-loading-bar">
@@ -96,38 +77,26 @@
 
   <!-- Login Options Section -->
   <div class="nav-login">
-    <div id="login-options" style="display: flex; align-items: center; gap: 1rem;">
-      <!-- Google Login Button -->
-      <button class="login-button" onclick="googleLogin()">
-        <img src="https://www.google.com/favicon.ico" alt="Google" style="width: 16px; height: 16px;">
-        Sign in with Google
-      </button>
-
-      <div class="login-divider"></div>
-
-      <!-- Telegram Login Widget -->
-      <div id="telegram-login">
-        <script async src="https://telegram.org/js/telegram-widget.js?7" data-telegram-login="socialLogin111Bot"
-          data-size="medium" data-onauth="onTelegramAuth(user)" data-request-access="write">
-          </script>
-      </div>
-    </div>
-
-    <!-- Add logout button (initially hidden) -->
-    <button id="logout-button" class="login-button" onclick="logout()" style="display: none;">
-      Logout
+    <!-- Google Login Button -->
+    <button class="login-button" onclick="googleLogin()">
+      <img src="https://www.google.com/favicon.ico" alt="Google" style="width: 16px; height: 16px;">
+      Sign in with Google
     </button>
+
+    <div class="login-divider"></div>
+
+    <!-- Telegram Login Widget -->
+    <div>
+      <script async src="https://telegram.org/js/telegram-widget.js?7" data-telegram-login="socialLogin111Bot"
+        data-size="medium" data-auth-url="https://2c22-219-92-39-81.ngrok-free.app/auth/telegram"
+        data-request-access="write">
+        </script>
+    </div>
   </div>
 
   <script>
-    // Add these variables at the top of your script
-    let isLoggedIn = false;
-    let unityLoaded = false;
-    let unityInstance = null;
-
     // Function to initiate Google login
     function googleLogin() {
-      sessionStorage.setItem('loginPending', 'true');
       window.location.href = "https://2c22-219-92-39-81.ngrok-free.app/auth/google";
     }
 
@@ -137,133 +106,14 @@
       const token = urlParams.get('token'); // Get JWT token from URL parameters
 
       if (token) {
+        // Store the token in sessionStorage
         sessionStorage.setItem('jwt_token', token);
-        isLoggedIn = true;
-        document.getElementById('login-message').style.display = 'none';
-        document.getElementById('unity-container').style.display = 'block';
-
-        // Only load Unity after successful login
-        if (!unityLoaded) {
-          loadUnity();
-        }
 
         // Check if unityInstance is defined (Unity fully loaded) and send the token
         if (typeof unityInstance !== 'undefined') {
           unityInstance.SendMessage('AuthManager', 'OnLoginSuccess', token);
         }
       }
-    }
-
-    // Wrap Unity loading code in a function
-    function loadUnity() {
-      console.log('Loading Unity...');
-      unityLoaded = true;
-      var script = document.createElement("script");
-      script.src = loaderUrl;
-      script.onload = () => {
-        createUnityInstance(canvas, config, (progress) => {
-          document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
-        }).then((instance) => {
-          unityInstance = instance; // Store the instance
-          document.querySelector("#unity-loading-bar").style.display = "none";
-          document.querySelector("#unity-fullscreen-button").onclick = () => {
-            unityInstance.SetFullscreen(1);
-          };
-
-          // Send token to Unity if we have one
-          const token = sessionStorage.getItem('jwt_token');
-          if (token) {
-            unityInstance.SendMessage('AuthManager', 'OnLoginSuccess', token);
-          }
-        }).catch((message) => {
-          alert(message);
-        });
-      };
-      document.body.appendChild(script);
-    }
-
-    // Add logout function
-    function logout() {
-      // Clear session storage
-      sessionStorage.removeItem('jwt_token');
-      sessionStorage.removeItem('loginPending');
-      sessionStorage.removeItem('username');  // Clear any other stored user data
-      sessionStorage.removeItem('user_id');
-      sessionStorage.removeItem('photo_url');
-      isLoggedIn = false;
-
-      // Redirect to the main page without any query parameters
-      window.location.href = window.location.pathname;  // This removes all query parameters
-    }
-
-    // Update login success handling
-    function handleLoginSuccess(token) {
-      console.log('Handling login success with token:', token);
-      sessionStorage.setItem('jwt_token', token);
-      isLoggedIn = true;
-
-      // Update UI
-      document.getElementById('login-message').style.display = 'none';
-      document.getElementById('unity-container').style.display = 'block';
-      document.getElementById('logout-button').style.display = 'block';
-      document.getElementById('login-options').style.display = 'none';
-
-      // Load Unity if not already loaded
-      if (!unityLoaded) {
-        loadUnity();
-      }
-    }
-
-    // Update captureAndStoreToken
-    function captureAndStoreToken() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('token');
-
-      if (token) {
-        handleLoginSuccess(token);
-      }
-    }
-
-    // Add Telegram callback handler
-    function onTelegramAuth(user) {
-      fetch('https://2c22-219-92-39-81.ngrok-free.app/auth/telegram', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(user)
-      })
-        .then(response => {
-          console.log('Telegram auth response:', response);
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.json();
-        })
-        .then(data => {
-          console.log('Telegram auth data:', data);
-          if (data.token) {
-            // Store user info
-            sessionStorage.setItem('username', user.first_name);
-            sessionStorage.setItem('user_id', user.id);
-            sessionStorage.setItem('photo_url', user.photo_url);
-
-            // Handle the login success directly instead of redirecting
-            handleLoginSuccess(data.token);  // This will load the game
-          } else {
-            console.error('No token received from server');
-          }
-        })
-        .catch(error => {
-          console.error('Error during Telegram authentication:', error);
-          alert('Failed to authenticate with Telegram. Please try again.');
-        });
-    }
-
-    // Check for existing token on page load
-    const existingToken = sessionStorage.getItem('jwt_token');
-    if (existingToken) {
-      handleLoginSuccess(existingToken);
     }
 
     // Load Unity and setup canvas and configurations
@@ -275,24 +125,24 @@
     // Modify or remove this function to customize the visually presented
     // way that non-critical warnings and error messages are presented to the
     // user.
-    // function unityShowBanner(msg, type) {
-    //   var warningBanner = document.querySelector("#unity-warning");
-    //   function updateBannerVisibility() {
-    //     warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
-    //   }
-    //   var div = document.createElement('div');
-    //   div.innerHTML = msg;
-    //   warningBanner.appendChild(div);
-    //   if (type == 'error') div.style = 'background: red; padding: 10px;';
-    //   else {
-    //     if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
-    //     setTimeout(function () {
-    //       warningBanner.removeChild(div);
-    //       updateBannerVisibility();
-    //     }, 5000);
-    //   }
-    //   updateBannerVisibility();
-    // }
+    function unityShowBanner(msg, type) {
+      var warningBanner = document.querySelector("#unity-warning");
+      function updateBannerVisibility() {
+        warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+      }
+      var div = document.createElement('div');
+      div.innerHTML = msg;
+      warningBanner.appendChild(div);
+      if (type == 'error') div.style = 'background: red; padding: 10px;';
+      else {
+        if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+        setTimeout(function () {
+          warningBanner.removeChild(div);
+          updateBannerVisibility();
+        }, 5000);
+      }
+      updateBannerVisibility();
+    }
 
     var buildUrl = "Build";
     var loaderUrl = buildUrl + "/WebGL.loader.js";
@@ -345,28 +195,28 @@
       canvas.style.height = "960px";
     }
 
-    // document.querySelector("#unity-loading-bar").style.display = "block";
+    document.querySelector("#unity-loading-bar").style.display = "block";
 
-    // var script = document.createElement("script");
-    // script.src = loaderUrl;
-    // script.onload = () => {
-    //   createUnityInstance(canvas, config, (progress) => {
-    //     document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
-    //   }).then((unityInstance) => {
-    //     document.querySelector("#unity-loading-bar").style.display = "none";
-    //     document.querySelector("#unity-fullscreen-button").onclick = () => {
-    //       unityInstance.SetFullscreen(1);
-    //     };
+    var script = document.createElement("script");
+    script.src = loaderUrl;
+    script.onload = () => {
+      createUnityInstance(canvas, config, (progress) => {
+        document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
+      }).then((unityInstance) => {
+        document.querySelector("#unity-loading-bar").style.display = "none";
+        document.querySelector("#unity-fullscreen-button").onclick = () => {
+          unityInstance.SetFullscreen(1);
+        };
 
-    //     // Call captureAndStoreToken to handle token once Unity is ready
-    //     captureAndStoreToken();
+        // Call captureAndStoreToken to handle token once Unity is ready
+        captureAndStoreToken();
 
-    //   }).catch((message) => {
-    //     alert(message);
-    //   });
-    // };
+      }).catch((message) => {
+        alert(message);
+      });
+    };
 
-    // document.body.appendChild(script);
+    document.body.appendChild(script);
 
   </script>
 </body>
