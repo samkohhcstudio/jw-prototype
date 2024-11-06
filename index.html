@@ -96,26 +96,27 @@
 
   <!-- Login Options Section -->
   <div class="nav-login">
-    <!-- Google Login Button -->
-    <button class="login-button" onclick="googleLogin()">
-      <img src="https://www.google.com/favicon.ico" alt="Google" style="width: 16px; height: 16px;">
-      Sign in with Google
-    </button>
+    <div id="login-options" style="display: flex; align-items: center; gap: 1rem;">
+      <!-- Google Login Button -->
+      <button class="login-button" onclick="googleLogin()">
+        <img src="https://www.google.com/favicon.ico" alt="Google" style="width: 16px; height: 16px;">
+        Sign in with Google
+      </button>
 
-    <div class="login-divider"></div>
+      <div class="login-divider"></div>
+
+      <!-- Telegram Login Widget -->
+      <div id="telegram-login">
+        <script async src="https://telegram.org/js/telegram-widget.js?7" data-telegram-login="socialLogin111Bot"
+          data-size="medium" data-onauth="onTelegramAuth(user)" data-request-access="write">
+          </script>
+      </div>
+    </div>
 
     <!-- Add logout button (initially hidden) -->
     <button id="logout-button" class="login-button" onclick="logout()" style="display: none;">
       Logout
     </button>
-
-    <!-- Telegram Login Widget -->
-    <div>
-      <script async src="https://telegram.org/js/telegram-widget.js?7" data-telegram-login="socialLogin111Bot"
-        data-size="medium" data-auth-url="https://2c22-219-92-39-81.ngrok-free.app/auth/telegram"
-        data-request-access="write">
-        </script>
-    </div>
   </div>
 
   <script>
@@ -182,20 +183,16 @@
 
     // Add logout function
     function logout() {
+      // Clear session storage
       sessionStorage.removeItem('jwt_token');
       sessionStorage.removeItem('loginPending');
+      sessionStorage.removeItem('username');  // Clear any other stored user data
+      sessionStorage.removeItem('user_id');
+      sessionStorage.removeItem('photo_url');
       isLoggedIn = false;
 
-      // Hide logout button, show login options
-      document.getElementById('logout-button').style.display = 'none';
-      document.querySelector('.nav-login').style.display = 'flex';
-
-      // Hide Unity container, show login message
-      document.getElementById('unity-container').style.display = 'none';
-      document.getElementById('login-message').style.display = 'block';
-
-      // Reload page to reset Unity
-      window.location.reload();
+      // Redirect to the main page without any query parameters
+      window.location.href = window.location.pathname;  // This removes all query parameters
     }
 
     // Update login success handling
@@ -207,6 +204,7 @@
       document.getElementById('login-message').style.display = 'none';
       document.getElementById('unity-container').style.display = 'block';
       document.getElementById('logout-button').style.display = 'block';
+      document.getElementById('login-options').style.display = 'none'; // Hide login options
 
       // Load Unity if not already loaded
       if (!unityLoaded) {
@@ -226,7 +224,6 @@
 
     // Add Telegram callback handler
     function onTelegramAuth(user) {
-      // Assuming your backend returns a token in the response
       fetch('https://2c22-219-92-39-81.ngrok-free.app/auth/telegram', {
         method: 'POST',
         headers: {
@@ -234,13 +231,29 @@
         },
         body: JSON.stringify(user)
       })
-        .then(response => response.json())
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
         .then(data => {
           if (data.token) {
+            // Store user info
+            sessionStorage.setItem('username', user.first_name);
+            sessionStorage.setItem('user_id', user.id);
+            sessionStorage.setItem('photo_url', user.photo_url);
+
+            // Handle the login success directly instead of redirecting
             handleLoginSuccess(data.token);
+          } else {
+            console.error('No token received from server');
           }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+          console.error('Error during Telegram authentication:', error);
+          alert('Failed to authenticate with Telegram. Please try again.');
+        });
     }
 
     // Check for existing token on page load
@@ -258,24 +271,24 @@
     // Modify or remove this function to customize the visually presented
     // way that non-critical warnings and error messages are presented to the
     // user.
-    function unityShowBanner(msg, type) {
-      var warningBanner = document.querySelector("#unity-warning");
-      function updateBannerVisibility() {
-        warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
-      }
-      var div = document.createElement('div');
-      div.innerHTML = msg;
-      warningBanner.appendChild(div);
-      if (type == 'error') div.style = 'background: red; padding: 10px;';
-      else {
-        if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
-        setTimeout(function () {
-          warningBanner.removeChild(div);
-          updateBannerVisibility();
-        }, 5000);
-      }
-      updateBannerVisibility();
-    }
+    // function unityShowBanner(msg, type) {
+    //   var warningBanner = document.querySelector("#unity-warning");
+    //   function updateBannerVisibility() {
+    //     warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+    //   }
+    //   var div = document.createElement('div');
+    //   div.innerHTML = msg;
+    //   warningBanner.appendChild(div);
+    //   if (type == 'error') div.style = 'background: red; padding: 10px;';
+    //   else {
+    //     if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+    //     setTimeout(function () {
+    //       warningBanner.removeChild(div);
+    //       updateBannerVisibility();
+    //     }, 5000);
+    //   }
+    //   updateBannerVisibility();
+    // }
 
     var buildUrl = "Build";
     var loaderUrl = buildUrl + "/WebGL.loader.js";
@@ -328,28 +341,28 @@
       canvas.style.height = "960px";
     }
 
-    document.querySelector("#unity-loading-bar").style.display = "block";
+    // document.querySelector("#unity-loading-bar").style.display = "block";
 
-    var script = document.createElement("script");
-    script.src = loaderUrl;
-    script.onload = () => {
-      createUnityInstance(canvas, config, (progress) => {
-        document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
-      }).then((unityInstance) => {
-        document.querySelector("#unity-loading-bar").style.display = "none";
-        document.querySelector("#unity-fullscreen-button").onclick = () => {
-          unityInstance.SetFullscreen(1);
-        };
+    // var script = document.createElement("script");
+    // script.src = loaderUrl;
+    // script.onload = () => {
+    //   createUnityInstance(canvas, config, (progress) => {
+    //     document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
+    //   }).then((unityInstance) => {
+    //     document.querySelector("#unity-loading-bar").style.display = "none";
+    //     document.querySelector("#unity-fullscreen-button").onclick = () => {
+    //       unityInstance.SetFullscreen(1);
+    //     };
 
-        // Call captureAndStoreToken to handle token once Unity is ready
-        captureAndStoreToken();
+    //     // Call captureAndStoreToken to handle token once Unity is ready
+    //     captureAndStoreToken();
 
-      }).catch((message) => {
-        alert(message);
-      });
-    };
+    //   }).catch((message) => {
+    //     alert(message);
+    //   });
+    // };
 
-    document.body.appendChild(script);
+    // document.body.appendChild(script);
 
   </script>
 </body>
